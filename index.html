@@ -321,6 +321,9 @@ textarea.input { min-height: 90px; resize: vertical; }
     <h1 style="margin: 0; font-size: 30px; font-weight: 400">Project tracker</h1>
     <p class="kicker" style="margin: 6px 0 27.6px">PECO Ways to Save</p>
     <form id="auth-form" style="display: flex; flex-direction: column; gap: 13.8px">
+      <label id="name-field" hidden style="display: flex; flex-direction: column; gap: 4.6px; font-size: 12px" class="muted">Username
+        <input class="input" id="signup-name" autocomplete="name" placeholder="How your name shows on the board" style="width: 100%; box-sizing: border-box">
+      </label>
       <label style="display: flex; flex-direction: column; gap: 4.6px; font-size: 12px" class="muted">Email
         <input class="input" type="email" id="email" required autocomplete="email" style="width: 100%; box-sizing: border-box">
       </label>
@@ -350,8 +353,16 @@ textarea.input { min-height: 90px; resize: vertical; }
       <span id="who"></span>
       <span>&middot; shared board</span>
       <span style="flex: 1"></span>
+      <a href="#" id="rename">Change username</a>
       <a href="#" id="export">Export CSV</a>
       <a href="#" id="signout">Sign out</a>
+    </div>
+
+    <div id="name-bar" hidden style="display: flex; align-items: center; gap: 9.2px; flex-wrap: wrap; margin-top: 13.8px; padding: 13.8px; border: 1px solid var(--color-accent-300); border-radius: var(--radius-md, 4px)">
+      <span style="font-size: 13px">Pick a username so your name shows on the board.</span>
+      <span style="flex: 1"></span>
+      <input class="input" id="name-input" placeholder="Your name" style="width: 200px">
+      <button class="btn btn-primary" id="name-save" type="button">Save</button>
     </div>
 
     <form id="add-form" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.3fr) minmax(0,0.8fr) auto; gap: 9.2px; align-items: center; padding: 18.4px 0; border-bottom: 1px solid var(--color-divider)">
@@ -373,7 +384,7 @@ textarea.input { min-height: 90px; resize: vertical; }
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth, onAuthStateChanged, signInWithEmailAndPassword,
-  createUserWithEmailAndPassword, signOut
+  createUserWithEmailAndPassword, signOut, updateProfile
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {
   getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot
@@ -420,6 +431,7 @@ $("auth-swap").onclick = e => {
   $("auth-submit").textContent = mode === "signin" ? "Sign in" : "Create account";
   $("auth-swap-text").textContent = mode === "signin" ? "No account yet?" : "Already have an account?";
   $("auth-swap").textContent = mode === "signin" ? "Create one" : "Sign in";
+  $("name-field").hidden = mode === "signin";
   $("auth-error").textContent = "";
 };
 
@@ -428,8 +440,15 @@ $("auth-form").onsubmit = async e => {
   $("auth-error").textContent = "";
   const email = $("email").value.trim(), pw = $("password").value;
   try {
-    if (mode === "signin") await signInWithEmailAndPassword(auth, email, pw);
-    else await createUserWithEmailAndPassword(auth, email, pw);
+    if (mode === "signin") {
+      await signInWithEmailAndPassword(auth, email, pw);
+    } else {
+      const name = $("signup-name").value.trim();
+      if (!name) { $("auth-error").textContent = "Pick a username."; return; }
+      const cred = await createUserWithEmailAndPassword(auth, email, pw);
+      await updateProfile(cred.user, { displayName: name });
+      $("who").textContent = name;
+    }
   } catch (err) {
     $("auth-error").textContent = err.code === "auth/invalid-credential"
       ? "That email and password don't match an account."
@@ -439,13 +458,38 @@ $("auth-form").onsubmit = async e => {
 
 $("signout").onclick = e => { e.preventDefault(); signOut(auth); };
 
+const me = () => {
+  const u = auth.currentUser;
+  return u ? (u.displayName || u.email) : "";
+};
+
+function openNameBar() {
+  const u = auth.currentUser;
+  $("name-input").value = (u && u.displayName) || "";
+  $("name-bar").hidden = false;
+  $("name-input").focus();
+}
+
+$("rename").onclick = e => { e.preventDefault(); openNameBar(); };
+
+$("name-save").onclick = async () => {
+  const name = $("name-input").value.trim();
+  if (!name) return;
+  await updateProfile(auth.currentUser, { displayName: name });
+  $("who").textContent = name;
+  $("name-bar").hidden = true;
+};
+
+$("name-input").onkeydown = e => { if (e.key === "Enter") $("name-save").click(); };
+
 onAuthStateChanged(auth, user => {
   unsub.forEach(f => f()); unsub = [];
   uid = user ? user.uid : null;
   $("gate").hidden = !!user;
   $("app").hidden = !user;
   if (!user) { vendors = []; projects = []; return; }
-  $("who").textContent = user.email;
+  $("who").textContent = me();
+  $("name-bar").hidden = !!user.displayName;
   const col = name => collection(db, name);
   unsub.push(onSnapshot(col("vendors"), s => {
     vendors = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
@@ -461,7 +505,7 @@ onAuthStateChanged(auth, user => {
 
 const pRef = id => doc(db, "projects", id);
 const patch = (id, fields) => updateDoc(pRef(id), Object.assign({}, fields, {
-  updatedBy: (auth.currentUser && auth.currentUser.email) || "",
+  updatedBy: me(),
   updatedAt: Date.now()
 }));
 
@@ -480,8 +524,8 @@ $("add-form").onsubmit = async e => {
     measure: $("q-measure").value.trim(),
     startDate: "", docsNeeded: "", notes: "", entered: false,
     createdAt: Date.now(),
-    addedBy: (auth.currentUser && auth.currentUser.email) || "",
-    updatedBy: (auth.currentUser && auth.currentUser.email) || "",
+    addedBy: me(),
+    updatedBy: me(),
     updatedAt: Date.now()
   });
   $("q-vendor").value = ""; $("q-name").value = "";
