@@ -602,7 +602,9 @@ document.addEventListener("click", async e => {
   if (open) { selId = open.dataset.open; return render(); }
   const rm = t.closest("[data-remove]");
   if (rm) { const id = rm.dataset.remove; selId = null; await deleteDoc(pRef(id)); return; }
-  if (t.closest("[data-close]")) { selId = null; return render(); }
+  if (t.closest("button[data-close]")) { selId = null; return render(); }
+  if (t.classList && t.classList.contains("drawer-bg")) { selId = null; return render(); }
+  if (t.closest(".drawer")) return;
 });
 
 document.addEventListener("change", async e => {
