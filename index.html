@@ -293,12 +293,15 @@ textarea.input { min-height: 90px; resize: vertical; }
    2. Authentication -> Email/Password -> Enable
    3. Firestore Database -> Create database (production mode)
    4. Project settings -> Web app -> copy the config into firebaseConfig below
-   5. Firestore Rules -> paste:
+   5. Firestore Rules -> paste (one shared board: any signed-in user reads and writes it):
         rules_version = '2';
         service cloud.firestore {
           match /databases/{database}/documents {
-            match /users/{userId}/{document=**} {
-              allow read, write: if request.auth != null && request.auth.uid == userId;
+            match /vendors/{id} {
+              allow read, write: if request.auth != null;
+            }
+            match /projects/{id} {
+              allow read, write: if request.auth != null;
             }
           }
         }
@@ -307,7 +310,8 @@ textarea.input { min-height: 90px; resize: vertical; }
         firebase init hosting   (public dir: the folder holding this file)
         firebase deploy
 
-  Coworkers open the URL, click "Create one", and get an empty board of their own.
+  Coworkers open the URL and click "Create one". Everyone sees and edits the same board,
+  live. Edits show up on other screens within a second, no refresh.
 -->
 </head>
 <body>
@@ -344,7 +348,9 @@ textarea.input { min-height: 90px; resize: vertical; }
 
     <div style="display: flex; align-items: center; gap: 9.2px; padding-top: 9.2px; font-size: 12px" class="muted">
       <span id="who"></span>
+      <span>&middot; shared board</span>
       <span style="flex: 1"></span>
+      <a href="#" id="export">Export CSV</a>
       <a href="#" id="signout">Sign out</a>
     </div>
 
@@ -440,7 +446,7 @@ onAuthStateChanged(auth, user => {
   $("app").hidden = !user;
   if (!user) { vendors = []; projects = []; return; }
   $("who").textContent = user.email;
-  const col = name => collection(db, "users", user.uid, name);
+  const col = name => collection(db, name);
   unsub.push(onSnapshot(col("vendors"), s => {
     vendors = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
     render();
@@ -453,8 +459,11 @@ onAuthStateChanged(auth, user => {
 
 /* ---------- writes ---------- */
 
-const pRef = id => doc(db, "users", uid, "projects", id);
-const patch = (id, fields) => updateDoc(pRef(id), fields);
+const pRef = id => doc(db, "projects", id);
+const patch = (id, fields) => updateDoc(pRef(id), Object.assign({}, fields, {
+  updatedBy: (auth.currentUser && auth.currentUser.email) || "",
+  updatedAt: Date.now()
+}));
 
 $("add-form").onsubmit = async e => {
   e.preventDefault();
@@ -462,15 +471,18 @@ $("add-form").onsubmit = async e => {
   if (!name) return;
   let vendor = vendors.find(v => v.name.toLowerCase() === name.toLowerCase());
   if (!vendor) {
-    const ref = await addDoc(collection(db, "users", uid, "vendors"), { name });
+    const ref = await addDoc(collection(db, "vendors"), { name });
     vendor = { id: ref.id, name };
   }
-  await addDoc(collection(db, "users", uid, "projects"), {
+  await addDoc(collection(db, "projects"), {
     vendorId: vendor.id,
     name: $("q-name").value.trim() || "Untitled project",
     measure: $("q-measure").value.trim(),
     startDate: "", docsNeeded: "", notes: "", entered: false,
-    createdAt: Date.now()
+    createdAt: Date.now(),
+    addedBy: (auth.currentUser && auth.currentUser.email) || "",
+    updatedBy: (auth.currentUser && auth.currentUser.email) || "",
+    updatedAt: Date.now()
   });
   $("q-vendor").value = ""; $("q-name").value = "";
 };
@@ -571,6 +583,7 @@ function renderDrawer(vName) {
       Entered into the portal
     </label>
     <button class="btn btn-secondary btn-block" data-remove="${esc(p.id)}" style="margin-top: 18.4px">Remove from board</button>
+    ${p.addedBy ? `<p class="muted" style="margin: 13.8px 0 0; font-size: 12px">Added by ${esc(p.addedBy)}${p.updatedBy && p.updatedBy !== p.addedBy ? " &middot; last edited by " + esc(p.updatedBy) : ""}</p>` : ""}
   </div></div>`;
 }
 
@@ -602,6 +615,28 @@ document.addEventListener("change", async e => {
     await patch(selId, { [t.dataset.field]: t.value });
   }
 });
+
+$("export").onclick = e => {
+  e.preventDefault();
+  const vName = id => { const v = vendors.find(x => x.id === id); return v ? v.name : ""; };
+  const cell = s => {
+    const v = String(s == null ? "" : s).replace(/\r?\n/g, " ");
+    return /[",]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  };
+  const cols = ["Vendor", "Project", "Measure", "Project start", "Docs needed", "Notes", "Added by", "Last updated by"];
+  const rows = projects.filter(p => !p.entered)
+    .slice()
+    .sort((a, b) => (vName(a.vendorId) + a.name).localeCompare(vName(b.vendorId) + b.name))
+    .map(p => [vName(p.vendorId), p.name, p.measure, p.startDate, p.docsNeeded, p.notes, p.addedBy, p.updatedBy].map(cell).join(","));
+  const csv = cols.join(",") + "\n" + rows.join("\n") + "\n";
+  const stamp = new Date().toISOString().slice(0, 10);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "pipeline-" + stamp + ".csv";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+};
 
 document.addEventListener("keydown", e => {
   if (e.key === "Escape" && selId) { selId = null; render(); }
