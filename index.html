@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PECO Ways to Save — Project Tracker</title>
+<style>
+/* Classical — design-system tokens and component classes. This file is the source of truth for the system's look; retune it here and see readme.md. */
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=Lora:wght@400;600&display=swap');
+
+:root {
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-text: #201f1d;
+  --color-accent: #b68235;
+  --color-accent-2: #ac803e;
+  --color-divider: color-mix(in srgb, #201f1d 16%, transparent);
+
+  /* Tonal ramps — generated in OKLCH on one shared lightness scale, so the
+     same step of any role matches the others in visual value. */
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
+
+  --color-accent-100: #fff3e4;
+  --color-accent-200: #ffe3bf;
+  --color-accent-300: #facb8d;
+  --color-accent-400: #e1ad66;
+  --color-accent-500: #c28d41;
+  --color-accent-600: #a06f24;
+  --color-accent-700: #7d5411;
+  --color-accent-800: #5a3b0a;
+  --color-accent-900: #3a270d;
+
+  --color-accent-2-100: #fff3e4;
+  --color-accent-2-200: #ffe3be;
+  --color-accent-2-300: #f5cd96;
+  --color-accent-2-400: #dbaf70;
+  --color-accent-2-500: #bc8f4e;
+  --color-accent-2-600: #9b7232;
+  --color-accent-2-700: #79561f;
+  --color-accent-2-800: #573d14;
+  --color-accent-2-900: #382810;
+
+  --font-heading: "Cormorant Garamond", system-ui, sans-serif;
+  --font-heading-weight: 600; /* review round 3: bold retired — semibold is the
+     interface headings' ceiling (they need the weight at small sizes); display
+     text goes lighter still, to the normal cut (see the deck) */
+  --font-body: "Lora", system-ui, sans-serif;
+
+  --space-1: 4.6px;
+  --space-2: 9.2px;
+  --space-3: 13.8px;
+  --space-4: 18.4px;
+  --space-6: 27.6px;
+  --space-8: 36.8px;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 7px;
+
+  /* Elevation — derived from the ground: soft ink-tinted shadows on a
+     light theme, a hairline edge + ambient darkness on a dark one. */
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+h1, h2, h3, h4 { font-family: var(--font-heading); font-weight: var(--font-heading-weight); }
+
+.plate{filter:sepia(0.22) saturate(0.82) contrast(1.05);box-sizing:border-box;
+  border:6px solid var(--color-surface);outline:1px solid var(--color-divider)}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Components — built with the tokens above. Plain CSS
+   on plain HTML: no JavaScript, no build step. Each class is documented in
+   readme.md and demonstrated in foundations/ and components/.
+   ══════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-size: 15px; line-height: 1.55; font-weight: 400; }
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  line-height: 1.12; letter-spacing: -0.015em; margin: 0 0 var(--space-2);
+}
+h1 { font-size: 42px; }
+h2 { font-size: 32px; }
+h3 { font-size: 25px; }
+h4 { font-size: 20px; }
+h5 { font-size: 16px; }
+h6 { font-size: 13px; }
+h6 { letter-spacing: 0.08em; text-transform: uppercase; }
+p { margin: 0 0 var(--space-3); }
+a { color: var(--color-accent); text-underline-offset: 3px; }
+img { display: block; max-width: 100%; }
+figure { margin: 0; }
+figcaption {
+  font-size: 11px; margin-top: var(--space-1);
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+}
+.text-muted { color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+:focus { outline: none; }
+:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+::selection { background: color-mix(in srgb, var(--color-accent) 30%, transparent); }
+
+/* — rules — */
+.hr {
+  height: 1px; border: 0; margin: var(--space-4) 0;
+  background: var(--color-divider);
+}
+
+/* — buttons — */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; text-decoration: none;
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 14px; line-height: 1.2; color: var(--color-text); /* matches the .input's 14px —
+     the pair sits side by side in sign-up rows */
+  background: transparent; border: 1px solid transparent;
+  padding: var(--space-2) calc(var(--space-3) * 1.2);
+  border-radius: var(--radius-md);
+}
+.btn svg { display: block; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary { color: var(--color-accent); border-color: var(--color-accent); }
+.btn-primary:hover { background: color-mix(in srgb, var(--color-accent) 12%, transparent); }
+.btn-primary:active { background: color-mix(in srgb, var(--color-accent) 22%, transparent); }
+.btn-secondary { border-color: var(--color-divider); }
+.btn-secondary:hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.btn-secondary:active { background: color-mix(in srgb, var(--color-text) 14%, transparent); }
+.btn-ghost { color: var(--color-accent); padding-inline: var(--space-1); }
+.btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+.btn-ghost:active { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
+.btn-icon { width: 36px; height: 36px; padding: 0; }
+.btn-block { width: 100%; margin-top: var(--space-2); }
+
+/* — forms — */
+.field > label {
+  display: block; font-size: 12px; margin-bottom: 5px;
+  color: color-mix(in srgb, var(--color-text) 70%, transparent);
+}
+.input {
+  width: 100%; min-height: 36px; padding: 6px 10px; font: inherit;
+  font-size: 14px; color: var(--color-text); caret-color: var(--color-accent);
+  background: transparent;
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+}
+.input:hover { border-color: color-mix(in srgb, var(--color-text) 45%, transparent); }
+.input:focus-visible { border-color: var(--color-accent); outline-offset: 0; }
+textarea.input { min-height: 90px; resize: vertical; }
+.radio { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+.radio input, .seg-opt input {
+  position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;
+}
+.radio .dot {
+  width: 16px; height: 16px; flex: none; border-radius: 50%;
+  border: 1.5px solid var(--color-divider);
+}
+.radio:hover .dot { border-color: var(--color-accent); }
+.radio input:checked + .dot {
+  border-color: var(--color-accent); background: var(--color-accent);
+  box-shadow: inset 0 0 0 4px var(--color-bg);
+}
+.radio input:focus-visible + .dot { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.seg {
+  display: inline-flex; overflow: hidden;
+  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
+}
+.seg-opt {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; font-size: 13px; cursor: pointer;
+}
+.seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
+.seg-opt:has(input:checked) { color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); }
+.seg-opt:not(:has(input:checked)):hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
+.seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+
+/* — cards — */
+.card {
+  display: flex; flex-direction: column; gap: var(--space-2);
+  padding: var(--space-3); border-radius: var(--radius-md); background: transparent; border: 1px solid var(--color-divider);
+}
+.card-kicker { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--color-accent); }
+.card-title {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 17px; line-height: 1.2;
+}
+.card-body { margin: 0; font-size: 13px; opacity: 0.8; flex: 1; }
+.card-meta {
+  display: flex; align-items: center; gap: 6px; font-size: 11px;
+  color: color-mix(in srgb, var(--color-text) 50%, transparent);
+}
+.elev-sm { box-shadow: var(--shadow-sm); }
+.elev-md { box-shadow: var(--shadow-md); }
+.elev-lg { box-shadow: var(--shadow-lg); }
+
+/* — tags — */
+.tag {
+  display: inline-flex; align-items: center; font-size: 11px;
+  letter-spacing: 0.02em; padding: 3px 10px;
+  border-radius: calc(var(--radius-md) * 0.75);
+}
+.tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
+.tag-accent-2 { background: var(--color-accent-2-100); color: var(--color-accent-2-800); }
+.tag-neutral { background: var(--color-neutral-100); color: var(--color-neutral-800); }
+.tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent); }
+
+/* — navigation — */
+.nav {
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-divider);
+}
+.nav-brand {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 18px; margin-right: auto;
+}
+.nav a { color: inherit; text-decoration: none; font-size: 14px; }
+.nav a:hover, .nav a[aria-current='page'] { color: var(--color-accent); }
+
+/* — tables — */
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: left; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: color-mix(in srgb, var(--color-text) 60%, transparent);
+  padding: var(--space-2); border-bottom: 1px solid var(--color-divider);
+}
+.table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-divider);
+}
+.table tbody tr:hover { background: color-mix(in srgb, var(--color-text) 4%, transparent); }
+
+/* — dialog — */
+.dialog-backdrop {
+  position: fixed; inset: 0; display: grid; place-items: center;
+  padding: var(--space-4);
+  background: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+}
+.dialog {
+  width: min(440px, 100%); display: flex; flex-direction: column; gap: var(--space-3);
+  padding: var(--space-4); border-radius: var(--radius-lg);
+  background: var(--color-surface); box-shadow: var(--shadow-lg); border: 1px solid var(--color-divider);
+}
+.dialog-title {
+  font-family: var(--font-heading); font-weight: var(--font-heading-weight);
+  font-size: 20px;
+}
+.dialog-body { font-size: 14px; opacity: 0.85; }
+.dialog-actions { display: flex; justify-content: flex-end; gap: var(--space-2); margin-top: var(--space-2); }
+
+
+</style>
+<style>
+  body { margin: 0; background: var(--color-bg); color: var(--color-text);
+         font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
+  h1, h2, h3, input, select, button, textarea { font-family: Helvetica, "Helvetica Neue", Arial, sans-serif; }
+  a { color: var(--color-accent-700); text-decoration: none; }
+  a:hover { color: var(--color-accent-600); text-decoration: underline; }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 36.8px 27.6px 73.6px; box-sizing: border-box; }
+  .row { border-top: 1px solid var(--color-divider); }
+  .vhead { display: flex; align-items: baseline; gap: 11px; width: 100%; padding: 18.4px 4px;
+           background: none; border: 0; cursor: pointer; text-align: left; color: var(--color-text); }
+  .vhead:hover { background: color-mix(in srgb, var(--color-accent) 6%, transparent); }
+  .caret { display: inline-block; transition: transform 140ms; color: var(--color-accent); font-size: 18px; line-height: 1; }
+  .caret.open { transform: rotate(90deg); }
+  .muted { color: var(--color-neutral-600); }
+  .kicker { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); }
+  .drawer-bg { position: fixed; inset: 0; background: color-mix(in srgb, #201f1d 30%, transparent);
+               display: flex; justify-content: flex-end; z-index: 40; }
+  .drawer { width: min(460px, 100%); background: var(--color-bg); border-left: 1px solid var(--color-divider);
+            box-shadow: var(--shadow-lg); overflow-y: auto; padding: 27.6px; box-sizing: border-box; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  [hidden] { display: none !important; }
+</style>
+<!--
+  Single-file project tracker. Firebase Auth (email + password) + Firestore.
+  Each signed-in user gets their own board.
+
+  Setup:
+   1. Firebase console -> Add project
+   2. Authentication -> Email/Password -> Enable
+   3. Firestore Database -> Create database (production mode)
+   4. Project settings -> Web app -> copy the config into firebaseConfig below
+   5. Firestore Rules -> paste:
+        rules_version = '2';
+        service cloud.firestore {
+          match /databases/{database}/documents {
+            match /users/{userId}/{document=**} {
+              allow read, write: if request.auth != null && request.auth.uid == userId;
+            }
+          }
+        }
+   6. Host it: put this file in a folder, then
+        npm install -g firebase-tools && firebase login
+        firebase init hosting   (public dir: the folder holding this file)
+        firebase deploy
+
+  Coworkers open the URL, click "Create one", and get an empty board of their own.
+-->
+</head>
+<body>
+
+<div id="gate" hidden>
+  <div style="max-width: 360px; margin: 12vh auto; padding: 0 27.6px">
+    <h1 style="margin: 0; font-size: 30px; font-weight: 400">Project tracker</h1>
+    <p class="kicker" style="margin: 6px 0 27.6px">PECO Ways to Save</p>
+    <form id="auth-form" style="display: flex; flex-direction: column; gap: 13.8px">
+      <label style="display: flex; flex-direction: column; gap: 4.6px; font-size: 12px" class="muted">Email
+        <input class="input" type="email" id="email" required autocomplete="email" style="width: 100%; box-sizing: border-box">
+      </label>
+      <label style="display: flex; flex-direction: column; gap: 4.6px; font-size: 12px" class="muted">Password
+        <input class="input" type="password" id="password" required minlength="6" autocomplete="current-password" style="width: 100%; box-sizing: border-box">
+      </label>
+      <button class="btn btn-primary btn-block" id="auth-submit" type="submit">Sign in</button>
+      <p id="auth-error" style="margin: 0; font-size: 13px; color: var(--color-accent-700)"></p>
+      <p style="margin: 0; font-size: 13px" class="muted">
+        <span id="auth-swap-text">No account yet?</span>
+        <a href="#" id="auth-swap">Create one</a>
+      </p>
+    </form>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <div class="wrap">
+    <div style="display: flex; align-items: baseline; gap: 13.8px; border-bottom: 1px solid var(--color-divider); padding-bottom: 13.8px">
+      <h1 style="margin: 0; font-size: 34px; font-weight: 400; line-height: 1.1">Project board</h1>
+      <span class="kicker">PECO Ways to Save</span>
+      <span style="flex: 1"></span>
+      <span id="count" class="muted tnum" style="font-size: 12px"></span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 9.2px; padding-top: 9.2px; font-size: 12px" class="muted">
+      <span id="who"></span>
+      <span style="flex: 1"></span>
+      <a href="#" id="signout">Sign out</a>
+    </div>
+
+    <form id="add-form" style="display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.3fr) minmax(0,0.8fr) auto; gap: 9.2px; align-items: center; padding: 18.4px 0; border-bottom: 1px solid var(--color-divider)">
+      <input class="input" id="q-vendor" list="vendor-list" placeholder="Vendor" style="width: 100%; box-sizing: border-box">
+      <input class="input" id="q-name" placeholder="Project" style="width: 100%; box-sizing: border-box">
+      <input class="input" id="q-measure" list="measure-list" placeholder="Measure" style="width: 100%; box-sizing: border-box">
+      <button class="btn btn-primary" type="submit" style="height: 40px">Add</button>
+      <datalist id="vendor-list"></datalist>
+      <datalist id="measure-list"></datalist>
+    </form>
+
+    <div id="board"></div>
+    <div id="archive" style="margin-top: 27.6px"></div>
+  </div>
+  <div id="drawer-host"></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// ---- PASTE YOUR FIREBASE WEB CONFIG HERE ----
+// Firebase console -> Project settings -> Your apps -> Web app.
+// Not secrets: access is controlled by the Firestore rules in the README.
+const firebaseConfig = {
+  apiKey: "PASTE_ME",
+  authDomain: "PASTE_ME.firebaseapp.com",
+  projectId: "PASTE_ME",
+  storageBucket: "PASTE_ME.appspot.com",
+  messagingSenderId: "PASTE_ME",
+  appId: "PASTE_ME"
+};
+// ---------------------------------------------
+
+const MEASURES = ["Lighting", "HVAC", "Refrigeration", "Motors & VFD", "Building shell", "Custom"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const dateLabel = d => {
+  if (!d) return "";
+  const [y, m, day] = d.split("-");
+  return MONTHS[Number(m) - 1] + " " + Number(day) + ", " + y;
+};
+
+let uid = null, unsub = [], vendors = [], projects = [], selId = null, showEntered = false;
+let mode = "signin";
+let collapsed = {};
+try { collapsed = JSON.parse(localStorage.getItem("peco-collapsed") || "{}"); } catch (e) {}
+
+/* ---------- auth ---------- */
+
+$("auth-swap").onclick = e => {
+  e.preventDefault();
+  mode = mode === "signin" ? "signup" : "signin";
+  $("auth-submit").textContent = mode === "signin" ? "Sign in" : "Create account";
+  $("auth-swap-text").textContent = mode === "signin" ? "No account yet?" : "Already have an account?";
+  $("auth-swap").textContent = mode === "signin" ? "Create one" : "Sign in";
+  $("auth-error").textContent = "";
+};
+
+$("auth-form").onsubmit = async e => {
+  e.preventDefault();
+  $("auth-error").textContent = "";
+  const email = $("email").value.trim(), pw = $("password").value;
+  try {
+    if (mode === "signin") await signInWithEmailAndPassword(auth, email, pw);
+    else await createUserWithEmailAndPassword(auth, email, pw);
+  } catch (err) {
+    $("auth-error").textContent = err.code === "auth/invalid-credential"
+      ? "That email and password don't match an account."
+      : err.message.replace("Firebase: ", "");
+  }
+};
+
+$("signout").onclick = e => { e.preventDefault(); signOut(auth); };
+
+onAuthStateChanged(auth, user => {
+  unsub.forEach(f => f()); unsub = [];
+  uid = user ? user.uid : null;
+  $("gate").hidden = !!user;
+  $("app").hidden = !user;
+  if (!user) { vendors = []; projects = []; return; }
+  $("who").textContent = user.email;
+  const col = name => collection(db, "users", user.uid, name);
+  unsub.push(onSnapshot(col("vendors"), s => {
+    vendors = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    render();
+  }));
+  unsub.push(onSnapshot(col("projects"), s => {
+    projects = s.docs.map(d => Object.assign({ id: d.id }, d.data()));
+    render();
+  }));
+});
+
+/* ---------- writes ---------- */
+
+const pRef = id => doc(db, "users", uid, "projects", id);
+const patch = (id, fields) => updateDoc(pRef(id), fields);
+
+$("add-form").onsubmit = async e => {
+  e.preventDefault();
+  const name = $("q-vendor").value.trim();
+  if (!name) return;
+  let vendor = vendors.find(v => v.name.toLowerCase() === name.toLowerCase());
+  if (!vendor) {
+    const ref = await addDoc(collection(db, "users", uid, "vendors"), { name });
+    vendor = { id: ref.id, name };
+  }
+  await addDoc(collection(db, "users", uid, "projects"), {
+    vendorId: vendor.id,
+    name: $("q-name").value.trim() || "Untitled project",
+    measure: $("q-measure").value.trim(),
+    startDate: "", docsNeeded: "", notes: "", entered: false,
+    createdAt: Date.now()
+  });
+  $("q-vendor").value = ""; $("q-name").value = "";
+};
+
+/* ---------- render ---------- */
+
+function render() {
+  const vName = id => { const v = vendors.find(x => x.id === id); return v ? v.name : ""; };
+  const live = projects.filter(p => !p.entered);
+  const done = projects.filter(p => p.entered);
+
+  $("count").textContent = live.length + (live.length === 1 ? " project tracked" : " projects tracked");
+  $("vendor-list").innerHTML = vendors.map(v => `<option value="${esc(v.name)}"></option>`).join("");
+  $("measure-list").innerHTML = Array.from(new Set(MEASURES.concat(projects.map(p => p.measure).filter(Boolean))))
+    .map(m => `<option value="${esc(m)}"></option>`).join("");
+
+  const sorted = vendors.slice().sort((a, b) => a.name.localeCompare(b.name));
+  let html = "";
+  sorted.forEach(v => {
+    const list = live.filter(p => p.vendorId === v.id)
+      .sort((a, b) => (a.startDate || "9999").localeCompare(b.startDate || "9999"));
+    if (!list.length) return;
+    const open = !collapsed[v.id];
+    const needs = list.filter(p => p.docsNeeded).length;
+    html += `<section style="border-bottom: 1px solid var(--color-divider)">
+      <button class="vhead" data-vendor="${esc(v.id)}">
+        <span class="caret ${open ? "open" : ""}">&rsaquo;</span>
+        <span style="font-size: 19px; font-weight: 600">${esc(v.name)}</span>
+        <span style="flex: 1"></span>
+        <span class="muted tnum" style="font-size: 12px">${list.length} ${list.length === 1 ? "project" : "projects"}${needs ? " · " + needs + " awaiting docs" : ""}</span>
+      </button>
+      <div ${open ? "" : "hidden"} style="padding: 0 4px 18.4px">
+        <table style="width: 100%; border-collapse: collapse"><tbody>
+        ${list.map(p => `<tr class="row">
+          <td style="width: 26px; padding: 13.8px 9.2px 13.8px 0; vertical-align: top">
+            <input type="checkbox" data-enter="${esc(p.id)}" ${p.entered ? "checked" : ""} title="Entered into the portal"
+                   style="accent-color: var(--color-accent); width: 16px; height: 16px; cursor: pointer">
+          </td>
+          <td data-open="${esc(p.id)}" style="padding: 13.8px 9.2px 13.8px 0; cursor: pointer; vertical-align: top">
+            <div style="font-size: 15px">${esc(p.name)}</div>
+            ${p.measure ? `<div class="muted" style="font-size: 13px; margin-top: 3px">${esc(p.measure)}</div>` : ""}
+            ${p.docsNeeded ? `<div style="font-size: 13px; color: var(--color-accent-700); margin-top: 6px">Needs: ${esc(p.docsNeeded)}</div>` : ""}
+            ${p.notes ? `<div class="muted" style="font-size: 13px; font-style: italic; margin-top: 4px; max-width: 64ch; text-wrap: pretty">${esc(p.notes)}</div>` : ""}
+          </td>
+          <td data-open="${esc(p.id)}" class="tnum" style="padding: 13.8px 0; cursor: pointer; text-align: right; vertical-align: top; white-space: nowrap; font-size: 13px; color: var(--color-neutral-700)">${esc(dateLabel(p.startDate))}</td>
+        </tr>`).join("")}
+        </tbody></table>
+      </div>
+    </section>`;
+  });
+  $("board").innerHTML = html || `<p class="muted" style="margin: 36.8px 0; text-align: center; font-size: 14px">Nothing on the board. Add a vendor above.</p>`;
+
+  $("archive").innerHTML = done.length ? `
+    <button class="btn btn-ghost" id="toggle-entered" style="font-size: 13px">${showEntered ? "Hide" : "Show"} ${done.length} entered into the portal</button>
+    ${showEntered ? `<div style="margin-top: 9.2px; border-top: 1px solid var(--color-divider)">
+      ${done.map(p => `<div style="display: flex; align-items: baseline; gap: 11px; padding: 11px 4px; border-bottom: 1px solid var(--color-divider); font-size: 13px" class="muted">
+        <input type="checkbox" data-enter="${esc(p.id)}" checked title="Put back on the board" style="accent-color: var(--color-accent); width: 16px; height: 16px; cursor: pointer">
+        <span>${esc(vName(p.vendorId))} — ${esc(p.name)}</span>
+        <span style="flex: 1"></span>
+        <span class="tnum">${esc(dateLabel(p.startDate))}</span>
+      </div>`).join("")}
+    </div>` : ""}` : "";
+  if ($("toggle-entered")) $("toggle-entered").onclick = () => { showEntered = !showEntered; render(); };
+
+  renderDrawer(vName);
+}
+
+function renderDrawer(vName) {
+  const host = $("drawer-host");
+  const p = projects.find(x => x.id === selId);
+  if (!p) { host.innerHTML = ""; return; }
+  const active = document.activeElement;
+  if (active && host.contains(active)) return; // don't clobber a field being typed in
+  host.innerHTML = `<div class="drawer-bg" data-close="1"><div class="drawer">
+    <div style="display: flex; align-items: flex-start; gap: 13.8px">
+      <div style="flex: 1">
+        <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">${esc(vName(p.vendorId))}</div>
+        <input data-field="name" value="${esc(p.name)}" style="margin-top: 4.6px; width: 100%; box-sizing: border-box; font-size: 21px; font-weight: 600; background: none; border: 0; border-bottom: 1px solid var(--color-divider); color: var(--color-text); padding: 0 0 4px">
+      </div>
+      <button class="btn btn-secondary btn-icon" data-close="1" aria-label="Close">&#10005;</button>
+    </div>
+    <hr class="hr">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 13.8px">
+      <label class="kicker" style="display: flex; flex-direction: column; gap: 4.6px">Measure
+        <input class="input" list="measure-list" data-field="measure" value="${esc(p.measure)}" style="width: 100%; box-sizing: border-box">
+      </label>
+      <label class="kicker" style="display: flex; flex-direction: column; gap: 4.6px">Project start
+        <input class="input tnum" type="date" data-field="startDate" value="${esc(p.startDate)}" style="width: 100%; box-sizing: border-box">
+      </label>
+    </div>
+    <div class="kicker" style="margin: 18.4px 0 6px">Docs needed</div>
+    <textarea class="input" rows="3" data-field="docsNeeded" placeholder="One per line" style="width: 100%; box-sizing: border-box; resize: vertical">${esc(p.docsNeeded)}</textarea>
+    <div class="kicker" style="margin: 18.4px 0 6px">Notes</div>
+    <textarea class="input" rows="4" data-field="notes" style="width: 100%; box-sizing: border-box; resize: vertical">${esc(p.notes)}</textarea>
+    <hr class="hr">
+    <label style="display: flex; align-items: center; gap: 9.2px; font-size: 14px; cursor: pointer">
+      <input type="checkbox" data-enter="${esc(p.id)}" ${p.entered ? "checked" : ""} style="accent-color: var(--color-accent); width: 16px; height: 16px">
+      Entered into the portal
+    </label>
+    <button class="btn btn-secondary btn-block" data-remove="${esc(p.id)}" style="margin-top: 18.4px">Remove from board</button>
+  </div></div>`;
+}
+
+/* ---------- delegation ---------- */
+
+document.addEventListener("click", async e => {
+  const t = e.target;
+  const vendor = t.closest("[data-vendor]");
+  if (vendor) {
+    const id = vendor.dataset.vendor;
+    collapsed[id] = !collapsed[id];
+    localStorage.setItem("peco-collapsed", JSON.stringify(collapsed));
+    return render();
+  }
+  const open = t.closest("[data-open]");
+  if (open) { selId = open.dataset.open; return render(); }
+  const rm = t.closest("[data-remove]");
+  if (rm) { const id = rm.dataset.remove; selId = null; await deleteDoc(pRef(id)); return; }
+  if (t.closest("[data-close]")) { selId = null; return render(); }
+});
+
+document.addEventListener("change", async e => {
+  const t = e.target;
+  if (t.dataset && t.dataset.enter) {
+    await patch(t.dataset.enter, { entered: t.checked });
+    return;
+  }
+  if (t.dataset && t.dataset.field && selId) {
+    await patch(selId, { [t.dataset.field]: t.value });
+  }
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && selId) { selId = null; render(); }
+});
+
+</script>
+</body>
+</html>
